@@ -1,0 +1,105 @@
+---
+title: "Guide to Processing `mothur` MiSeq SOP Final Files for Microbiome Analysis"
+subtitle: "Version 1"
+author: "Trenton M. Wolfe"
+date: "October 3, 2024"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      warning = FALSE,
+                      message = FALSE,
+                      include = TRUE,
+                      eval= TRUE
+                      )
+```
+
+# Getting the `R` Environment Prepared
+
+This `R Markdown` will help guide you on how to process the raw "final" files made at the end of the `mothur` "Miseq SOP". If you need to get those files, their SOP can be found at the link below. 
+
+- https://mothur.org/wiki/miseq_sop/
+
+The first thing we need to do is call in all the libraries that we will need. There's quite a few here, but there's a lot to do with this type of data. If you don't have these libraries installed in your **own** `R Studio` environment, you will need to use the `install.packages("package-name")` function **before** running the libraries below. In the newest version of `R` (version 4.4.1), it should give an alert at the top of your screen saying it needs to install the packages. Regardless, it's pretty straightforward to install them. As a friendly reminder, if you just opened `R Studio` for the first time in this "session", you will need to recall the libraries. *Also, if you had a recent update, the libraries will have to be reinstalled.*
+
+Here's the libraries we will use:
+
+```{r, message=FALSE}
+
+#Required Libraries
+library(tidyr)
+library(readr)
+library(ggplot2)
+library(gganimate)
+library(dplyr)
+library(ggpubr)
+library(plotly)
+library(tidyverse)
+library(ggtext)
+library(RColorBrewer)
+library(vegan)
+library(readxl)
+
+```
+
+
+## **Step 1:** Import the "final.opti_mcc.shared" `mothur` output file
+
+
+First, let's read in the **"final.opti_mcc.shared"** file from `mothur` output and make it a "tibble" in `R` that has the count of each OTU for each sample (a massive dataframe). 
+
+```{r}
+otu_counts <- read_tsv("/Users/trentonwolfe/Desktop/ZBiotics_Phase-0/final.opti_mcc.shared")%>%
+  select(-label, -numOtus)%>%
+  pivot_longer(-Group, names_to = "otu", values_to = "count")
+
+#Let's take a look at the first 5 rows to see what we just made
+head(otu_counts, 5)
+```
+
+So, what we just did is convert the `mothur` "final.opti_mcc.shared" file to an `R`-friendly data frame that we can work with. What the code above does is calls in the file with the `read_tsv` function and all you do is paste the file name (if it's in the same directory as your `R` project is) or the pathname to make sure it can find it. Then, we use the `%>%` (a pipe) to refer to this file for downstream functions. The `select` function will select certain columns within the file. OR in our case, with a "-" in front, remove the `label` and `numOtus` columns, which aren't too important. The `label` was how similar OTU's were deemed (in our case the `label` = 0.03, which is a 97% match identity to call something the same OTU) and the `numOtus` is the total number of OTUs in a sample. We don't need this in the current file. 
+
+So I said this is massive, right? Well let's see how many rows are in the dataframe:
+
+```{r}
+nrow(otu_counts)
+```
+
+So we have a LOT of data. Which makes sense, right? Because this data frame has the count of every OTU (hundreds) for each sample (n=41 in this case). 
+
+## **Step 2:** Extract the `Group` Names from the `otu_counts` tibble
+
+Ok, moving on. One of the most important things to check here before we get to our metadata file is to ensure ALL and ONLY the `Group` items in our `otu_counts` data frame is in our metadata file. So, let's extract the unique `Group` from `otu_counts`
+
+```{r}
+groups <- as.data.frame(unique(otu_counts$Group))
+write_excel_csv(groups, file="groups.csv")
+print(groups)
+```
+
+The code above made an Excel file that has all the unique `Group` names in the `otu_counts` file. In theory, if nothing went wrong with sequencing or `mothur` processing, all of your samples should be in here. But this is a good point to triple-check that. 
+
+## **Step 3:** Import *your* metadata file
+
+Once you confirm the metadata file matches the `Group` names from above, load in the metadata file **you** have on the data (i.e., this is not an ouput from `mothur`). It should look something like the example file below. 
+
+```{r}
+Z.meta <- read.csv("/Users/trentonwolfe/Desktop/ZBiotics_Phase-0/Zbio-meta.csv")
+print(colnames(Z.meta))
+```
+
+Okay, there are a few things to note here. First off, the `Group` column **MUST** match the `Group` column of the `otu_counts` data frame. Also, enusre that `Group` is with a capital "G" because `R` is casesensitive. The other columns `Participant` and `Sample` are "metadata" because they're things that are relevant to the experiment, but aren't from the `mothur` output (i.e., everything quantified or noted **outside** of `mothur`). 
+
+
+
+
+
+
+
+
+
+
+
+
+
