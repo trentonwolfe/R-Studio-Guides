@@ -1,9 +1,12 @@
 ---
 title: "Guide to Processing `mothur` MiSeq SOP Final Files for Microbiome Analysis"
-subtitle: "Version 1"
 author: "Trenton M. Wolfe"
 date: "October 3, 2024"
-output: html_document
+output: 
+  prettydoc::html_pretty:
+    theme: cayman
+    toc: yes
+subtitle: Version 1
 ---
 
 ```{r setup, include=FALSE}
@@ -13,6 +16,8 @@ knitr::opts_chunk$set(echo = TRUE,
                       include = TRUE,
                       eval= TRUE
                       )
+
+
 ```
 
 # Getting the `R` Environment Prepared
